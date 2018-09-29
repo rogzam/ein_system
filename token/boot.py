@@ -7,13 +7,13 @@ import machine
 import network
 import time
 from umqtt.simple import MQTTClient
-import esp
 
 ## DEFINITIONS
 
 ring_pix = 16
 ring_pin = 22
 ring = neopixel.NeoPixel(machine.Pin(ring_pin), ring_pix)
+bat = machine.ADC(machine.Pin(35))
 
 sec_on_mlt = 20
 sec_on_cyc = 3
@@ -31,8 +31,6 @@ aio_msgs = 'rogzam/feeds/msgs'
 aio_client = MQTTClient(aio_id, aio_server, aio_port, aio_user, aio_key)
 
 tok_id = '0001'
-
-esp.osdebug(None)
 
 ## FUNCTIONS
 
@@ -73,13 +71,16 @@ def sec_on():
 
 def send_msg():
     try:
-        aio_client.publish(topic = aio_msgs, msg = msg_tok)
-        time.sleep(1)
-        aio_client.publish(topic = aio_msgs, msg = msg_rdy)
+        aio_client.publish(topic = aio_msgs, msg = 'Token [ '+ tok_id + ' ] connected to IP: '+ str(wifi_ntw.ifconfig()[0]))
+        aio_client.publish(topic = aio_msgs, msg = 'Token [ '+ tok_id + ' ] ready.')
         print('Message published.')
     except Exception as e:
         print('Failed to publish message.')
-    pass    
+    pass
+
+def bat_val():
+    aio_client.publish(topic = aio_msgs, msg = 'Battery = ' + str(bat.read()) + '/4100')
+    print('Battery = ' + str(bat.read()) + '/4100')
 
 ## EXECUTION    
 
@@ -87,3 +88,4 @@ wifi_connect()
 sec_on()
 aio_client.connect()
 send_msg()
+bat_val()
