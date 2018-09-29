@@ -1,10 +1,11 @@
 
 ### BOOT FILE FOR TOKEN INITIALIZATION / RZ - 2018 ###
 
-import network
-import machine
 import neopixel
+import machine
+import network
 import time
+from umqtt.simple import MQTTClient
 
 ## DEFINITIONS
 
@@ -18,6 +19,14 @@ sec_on_cyc = 3
 wifi_ssid = "Rog"
 wifi_pass = "Roghotspot88"
 wifi_ntw = network.WLAN(network.STA_IF)
+
+aio_server = 'io.adafruit.com'
+aio_port = 1883
+aio_user = 'rogzam'
+aio_key = '6d2080fc57374353ba8a59d11dcefbb3'
+aio_id = 'whatever_client_id'
+aio_msgs = 'rogzam/feeds/msgs'
+aio_client = MQTTClient(aio_id, aio_server, aio_port, aio_user, aio_key)
 
 tok_id = '0001'
 
@@ -37,9 +46,6 @@ def wifi_connect():
             pass
         
     print(msg_tok)
-
-def send_msg():
-    pass
 
 def sec_on():
     
@@ -62,7 +68,19 @@ def sec_on():
     
     print(msg_rdy)
 
+def send_msg():
+    try:
+        aio_client.publish(topic = aio_msgs, msg = msg_tok)
+        time.sleep(1)
+        aio_client.publish(topic = aio_msgs, msg = msg_rdy)
+        print('Message published.')
+    except Exception as e:
+        print('Failed to publish message.')
+    pass    
+
 ## EXECUTION    
 
 wifi_connect()
 sec_on()
+aio_client.connect()
+send_msg()
