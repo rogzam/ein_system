@@ -1,57 +1,68 @@
-## BOOT FILE FOR TOKEN INITIALIZATION
+
+### BOOT FILE FOR TOKEN INITIALIZATION / RZ - 2018 ###
 
 import network
 import machine
 import neopixel
 import time
 
-## SET-UP 
+## DEFINITIONS
 
-pix_n = 16
-pin_in = 22
+ring_pix = 16
+ring_pin = 22
+ring = neopixel.NeoPixel(machine.Pin(ring_pin), ring_pix)
 
-wifi_ssid = "TSHGuest"
-wifi_pass = ""
+sec_on_mlt = 20
+sec_on_cyc = 3
 
-np = neopixel.NeoPixel(machine.Pin(pin_in), pix_n)
+wifi_ssid = "Rog"
+wifi_pass = "Roghotspot88"
+wifi_ntw = network.WLAN(network.STA_IF)
 
-time.sleep(1)
-np.fill((0,0,0))
-np.write()
+tok_id = '0001'
 
-sta_if = network.WLAN(network.STA_IF)
-if not sta_if.isconnected():
-    print('...connecting...')
-    sta_if.active(True)
-    sta_if.connect(wifi_ssid,wifi_pass)
-    while not sta_if.isconnected():
-        pass
+## MESSAGES
+
+msg_tok = 'Token [ '+ tok_id + ' ] connected to IP: '+ wifi_ntw.ifconfig()[0]
+msg_rdy = 'Token [ '+ tok_id + ' ] ready.'
+
+## FUNCTIONS
+
+def wifi_connect():
     
-print('CONNECTED', sta_if.ifconfig())
+    if not wifi_ntw.isconnected():
+        wifi_ntw.active(True)
+        wifi_ntw.connect(wifi_ssid,wifi_pass)
+        while not wifi_ntw.isconnected():
+            pass
+        
+    print(msg_tok)
 
-mlt = 20
-cyc = 4
-val_on = mlt * cyc
+def send_msg():
+    pass
 
-while True:
+def sec_on():
     
-    for i in range(cyc):
-        for j in range(pix_n):
-            np[j] = ((i+1)*mlt,(i+1)*mlt,(i+1)*mlt)
+    sec_on_val = sec_on_mlt * sec_on_cyc
+    for i in range(sec_on_cyc):
+        for j in range(ring_pix):
+            ring[j] = ((i+1)*sec_on_mlt,(i+1)*sec_on_mlt,(i+1)*sec_on_mlt)
             time.sleep_ms(30)
-            np.write()
+            ring.write()
 
-    for i in range (val_on):
-        for j in range(pix_n):
-            dim = val_on - i
-            np[j] = (dim,dim,dim)
+    for i in range (sec_on_val):
+        for j in range(ring_pix):
+            dim = sec_on_val - i
+            ring[j] = (dim,dim,dim)
 
-        np.write()
+        ring.write()
         time.sleep_ms(20)
+    ring.fill((0,0,0))
+    ring.write()
+    
+    print(msg_rdy)
 
-    np.fill((0,0,0))
-    np.write()
+## EXECUTION    
 
-    break    
-
-print('DEVICE READY')
+wifi_connect()
+sec_on()
