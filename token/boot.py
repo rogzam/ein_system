@@ -1,11 +1,13 @@
-
 ### BOOT FILE FOR TOKEN INITIALIZATION / RZ - 2018 ###
+
+## LIBRARIES
 
 import neopixel
 import machine
 import network
 import time
 from umqtt.simple import MQTTClient
+import esp
 
 ## DEFINITIONS
 
@@ -30,10 +32,7 @@ aio_client = MQTTClient(aio_id, aio_server, aio_port, aio_user, aio_key)
 
 tok_id = '0001'
 
-## MESSAGES
-
-msg_tok = 'Token [ '+ tok_id + ' ] connected to IP: '+ wifi_ntw.ifconfig()[0]
-msg_rdy = 'Token [ '+ tok_id + ' ] ready.'
+esp.osdebug(None)
 
 ## FUNCTIONS
 
@@ -42,9 +41,12 @@ def wifi_connect():
     if not wifi_ntw.isconnected():
         wifi_ntw.active(True)
         wifi_ntw.connect(wifi_ssid,wifi_pass)
+        
         while not wifi_ntw.isconnected():
             pass
-        
+
+    msg_tok = 'Token [ '+ tok_id + ' ] connected to IP: '+ str(wifi_ntw.ifconfig()[0])
+    time.sleep(1)
     print(msg_tok)
 
 def sec_on():
@@ -66,6 +68,7 @@ def sec_on():
     ring.fill((0,0,0))
     ring.write()
     
+    msg_rdy = 'Token [ '+ tok_id + ' ] ready.'
     print(msg_rdy)
 
 def send_msg():
