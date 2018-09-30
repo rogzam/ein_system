@@ -13,9 +13,11 @@ from umqtt.simple import MQTTClient
 ring_pix = 16
 ring_pin = 22
 ring = neopixel.NeoPixel(machine.Pin(ring_pin), ring_pix)
-bat = machine.ADC(machine.Pin(35))
 
-sec_on_mlt = 20
+bat = machine.ADC(machine.Pin(35))
+bat.atten(3)
+
+sec_on_mlt = 30
 sec_on_cyc = 3
 
 wifi_ssid = "Rog"
@@ -40,11 +42,13 @@ def wifi_connect():
         wifi_ntw.active(True)
         wifi_ntw.connect(wifi_ssid,wifi_pass)
         
-        while not wifi_ntw.isconnected():
-            pass
+        for i in range(3):
+            while not wifi_ntw.isconnected():
+                print('CONNECTION ATTEMPT: '+str(i+1)+ '...')
+                time.sleep(0.4)
+                pass
 
-    msg_tok = 'Token [ '+ tok_id + ' ] connected to IP: '+ str(wifi_ntw.ifconfig()[0])
-    time.sleep(1)
+    msg_tok = 'TOKEN ['+tok_id+'] CONNECTED TO: '+ str(wifi_ntw.ifconfig()[0])
     print(msg_tok)
 
 def sec_on():
@@ -53,34 +57,40 @@ def sec_on():
     for i in range(sec_on_cyc):
         for j in range(ring_pix):
             ring[j] = ((i+1)*sec_on_mlt,(i+1)*sec_on_mlt,(i+1)*sec_on_mlt)
-            time.sleep_ms(30)
+            time.sleep(0.05)
             ring.write()
+
+    time.sleep(0.4)
 
     for i in range (sec_on_val):
         for j in range(ring_pix):
             dim = sec_on_val - i
             ring[j] = (dim,dim,dim)
-
         ring.write()
-        time.sleep_ms(20)
+        time.sleep(0.02)
+        
     ring.fill((0,0,0))
     ring.write()
     
-    msg_rdy = 'Token [ '+ tok_id + ' ] ready.'
+    msg_rdy = 'TOKEN ['+ tok_id +'] READY.'
     print(msg_rdy)
 
 def send_msg():
+    
     try:
-        aio_client.publish(topic = aio_msgs, msg = 'Token [ '+ tok_id + ' ] connected to IP: '+ str(wifi_ntw.ifconfig()[0]))
-        aio_client.publish(topic = aio_msgs, msg = 'Token [ '+ tok_id + ' ] ready.')
-        print('Message published.')
+        time.sleep(0.2)
+        aio_client.publish(topic = aio_msgs, msg = 'TOKEN ['+tok_id+'] CONNECTED TO: '+ str(wifi_ntw.ifconfig()[0]))
+        print('MESSAGE PUBLISHED.')
     except Exception as e:
-        print('Failed to publish message.')
+        print('FAILED TO PUBLISH MESSAGE.')
     pass
 
-def bat_val():
-    aio_client.publish(topic = aio_msgs, msg = 'Battery = ' + str(bat.read()) + '/4100')
-    print('Battery = ' + str(bat.read()) + '/4100')
+def bat_lvl():
+
+    lvl = bat.read()* 2 * 100 / 4700
+    time.sleep(0.4)
+    aio_client.publish(topic = aio_msgs, msg = 'BATTERY LEVEL: '+ str(lvl)+'%')
+    print('BATTERY LEVEL: {:.2f} %'.format(lvl))
 
 ## EXECUTION    
 
@@ -88,4 +98,4 @@ wifi_connect()
 sec_on()
 aio_client.connect()
 send_msg()
-bat_val()
+bat_lvl()
