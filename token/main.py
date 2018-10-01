@@ -23,7 +23,7 @@ print("Connected to Wifi")
 
 # FUNCTIONS
 
-def sub_cb(topic, msg):          # sub_cb means "callback subroutine"
+def sub_cb(topic, msg):         # sub_cb means "callback subroutine"
     if msg == b"0":             # If message says "ON" ...
         np.fill((0,255,0))       # ... then LED on
         np.write()
