@@ -92,11 +92,12 @@ def msg_bat():
         print('BATTERY LEVEL PUBLISHED.')
     except Exeption as e:
         print('FAILED TO PUBLISH BATTERY LEVEL.')
+    pass    
 
 ## EXECUTION    
 
 wifi_connect()
-sec_on()
 aio_client.connect()
+sec_on()
 msg_sts()
 msg_bat()
