@@ -38,6 +38,13 @@ aio_client = MQTTClient(aio_id, aio_server, aio_port, aio_user, aio_key)
 
 msg_dec = 0
 
+col_dic = { 0 : 'WHITE',
+            1 : 'GREEN',
+            2 : 'YELLOW',
+            3 : 'RED',
+            4 : 'BLUE',
+            5 : 'PURPLE', }
+
 ## FUNCTIONS
         
 def wifi_connect():
@@ -48,9 +55,65 @@ def wifi_connect():
         
         for i in range(3):
             while not wifi_ntw.isconnected():
-                print('CONNECTION ATTEMPT: '+str(i+1)+ '...')
-                time.sleep(0.4)
+                print('...connecting to wifi...')
+                time.sleep(0.5)
                 pass
+
+def sec_on():
+    
+    sec_on_val = sec_on_mlt * sec_on_cyc
+    for i in range(sec_on_cyc):
+        for j in range(ring_pix):
+            ring[j] = ((i+1)*sec_on_mlt,(i+1)*sec_on_mlt,(i+1)*sec_on_mlt)
+            time.sleep(0.05)
+            ring.write()
+
+    time.sleep(0.4)
+
+    for i in range (sec_on_val):
+        for j in range(ring_pix):
+            dim = sec_on_val - i
+            ring[j] = (dim,dim,dim)
+        ring.write()
+        time.sleep(0.02)
+        
+    ring.fill((0,0,0))
+    ring.write()
+
+    time.sleep(2)
+
+def msg_con():
+    try:
+        time.sleep(0.4)
+        aio_client.publish(topic = aio_sts, msg = 'TOKEN ['+tkn_id+'] CONNECTED TO: '+ str(wifi_ntw.ifconfig()[0]))
+        print('TOKEN ['+tkn_id+'] CONNECTED TO: '+ str(wifi_ntw.ifconfig()[0]))
+        #print('STATUS PUBLISHED.')
+    except Exception as e:
+        #print('FAILED TO PUBLISH CONNECTION STATUS.')
+        pass
+
+def msg_bat():
+
+    lvl = bat.read()* 2 * 100 / 4700
+    try:       
+        time.sleep(0.6)
+        aio_client.publish(topic = aio_sts, msg = 'TOKEN [{}] BATTERY LEVEL IS {:.2f} %'.format(tkn_id,lvl))
+        time.sleep(0.4)
+        aio_client.publish(topic = aio_bat, msg = str(bat.read()*2))
+        #print('BATTERY LEVEL: {:.2f} %'.format(lvl))
+    except Exception as e:
+        pass
+        #print('FAILED TO PUBLISH BATTERY LEVEL.')
+
+def msg_sts(bea_cyc,bea_sle):
+    try:       
+        time.sleep(0.6)
+        aio_client.publish(topic = aio_sts, msg = 'TOKEN [{}] IS {}, WITH {} BEATS EVERY {} SECONDS.'.format(tkn_id,col_dic[msg_dec],str(bea_cyc),str(bea_sle)))
+        aio_client.publish(topic = aio_sts, msg = msg_dec)
+        #print('TOKEN IS: '+ str(msg_dec))
+    except Exception as e:
+        pass
+        #print('FAILED TO PUBLISH TOKEN STATUS') 
 
 def sub_cb(topic,msg):
     
@@ -60,67 +123,85 @@ def sub_cb(topic,msg):
     
     return msg_dec
 
-def tkn_sec(msg_dec,speed=8):
+def tkn_bea(bea_cyc=2,bea_spe=4,bea_col='whi',bea_sle=5):
 
-    if msg_dec == 1: 
-        for i in range(0,2*512,speed):
-            for j in range (ring_pix):
-                if (i // 256) % 2 == 0:
-                    val = i
-                else:
-                    val = 255 - i    
-                ring[j] = (0,val,0)
-            ring.write()
-            time.sleep_ms(30)
+    msg_sts(bea_cyc,bea_sle)
 
-    elif msg_dec == 2: 
-        for i in range(0,2*512,speed):
-            for j in range (ring_pix):
-                if (i // 256) % 2 == 0:
-                    val = i
-                else:
-                    val = 255 - i    
-                ring[j] = (val,val,0)   
-            ring.write()
-            time.sleep_ms(30)
-            
-    elif msg_dec == 3:    
-        for i in range(0,2*512,speed):
-            for j in range (ring_pix):
-                if (i // 256) % 2 == 0:
-                    val = i
-                else:
-                    val = 255 - i    
-                ring[j] = (val,0,0)
-            ring.write()
-            time.sleep_ms(30)        
+    for i in range(0,bea_cyc*512,bea_spe):
+        for j in range (ring_pix):
+            if (i // 256) % 2 == 0:
+                val = i
+            else:
+                val = 255 - i
 
-    else: 
-        for i in range(0,1*512,speed):
-            for j in range (ring_pix):
-                if (i // 256) % 2 == 0:
-                    val = i
-                else:
-                    val = 255 - i    
+            if bea_col == 'whi':
                 ring[j] = (val,val,val)
-            ring.write()
-            time.sleep_ms(30)
+            elif bea_col == 'gre':
+                ring[j] = (0,val,0)
+            elif bea_col == 'yel':
+                ring[j] = (val,val,0)
+            elif bea_col == 'red':
+                ring[j] = (val,0,0)
+            elif bea_col == 'blu':
+                ring[j] = (0,0,val)
+            else:
+                ring[j] = (val,0,val)
 
+        
+        ring.write()
+        time.sleep_ms(20)
+
+    tkn_cle()
+    time.sleep(bea_sle)
+
+def tkn_sec():
+    
+    if msg_dec == 0:        
+        tkn_bea(bea_cyc=2,bea_spe=4,bea_col='whi',bea_sle=5)
+        
+    elif msg_dec == 1:      
+        tkn_bea(bea_cyc=2,bea_spe=4,bea_col='gre',bea_sle=5)
+
+    elif msg_dec == 2:      
+        tkn_bea(bea_cyc=2,bea_spe=4,bea_col='yel',bea_sle=2)
+
+    elif msg_dec == 3:      
+        tkn_bea(bea_cyc=2,bea_spe=4,bea_col='red',bea_sle=0)
+
+    elif msg_dec == 4:      
+        tkn_bea(bea_cyc=2,bea_spe=4,bea_col='blu',bea_sle=5)    
+
+    else:
+        tkn_bea(bea_cyc=2,bea_spe=4,bea_col='pur',bea_sle=1)
+        
+def tkn_cle():
+    
     for i in range(3):        
         ring.fill((0,0,0))
         ring.write()
 
-    time.sleep(4)
-
 def tkn_loop():
-
+    
+    sec_cou = 0
+    
     while True:
+        print(sec_cou)
         aio_client.check_msg()
-        tkn_sec(msg_dec)
+        tkn_sec()
+
+        if sec_cou == 4:
+            msg_bat()
+            sec_cou = 0
+        else:
+            sec_cou = sec_cou +1
+            
+## EXECUTION        
 
 wifi_connect()
 aio_client.set_callback(sub_cb)
 aio_client.connect()
 aio_client.subscribe(aio_lin)
+msg_con()
+sec_on()
 
 tkn_loop()
