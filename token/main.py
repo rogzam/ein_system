@@ -48,17 +48,26 @@ col_dic = { 0 : 'WHITE',
 ## FUNCTIONS
         
 def wifi_connect():
-    '''Connects to network using ssid & passwords introduced at the definition section'''
-    
+    '''Connects to network using ssid & passwords introduced at the definition section.
+       Also tries to connect to wifi 20 times, after that, it goes into deepsleep mode.'''
+
+    cnt = 0
+
     if not wifi_ntw.isconnected():
         wifi_ntw.active(True)
         wifi_ntw.connect(wifi_ssid,wifi_pass)
         
-        for i in range(3):
-            while not wifi_ntw.isconnected():
-                print('...connecting to wifi...')
-                time.sleep(0.5)
-                pass
+        while not wifi_ntw.isconnected():
+            
+            print('...connecting to wifi...', str(cnt))
+            time.sleep(0.5)
+
+            if cnt >= 20:
+                cnt = 0
+                machine.deepsleep()      
+            else:
+                cnt = cnt + 1
+                pass            
 
 def sec_on():
     '''Draws an on secuence on the LED ring, starts with an incremental spiral that
