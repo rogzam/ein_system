@@ -248,19 +248,16 @@ def tkn_loop():
 
     sec_cou = 0
     while True:
-        usb_sts = usb_chk()
 
-        if usb_sts == 0:
-            aio_client.check_msg()
-            tkn_sec()
+        aio_client.check_msg()
+        tkn_sec()
 
-            if sec_cou == 4:
-                msg_bat()
-                sec_cou = 0
-            else:
-                sec_cou = sec_cou +1
+        if sec_cou == 4:
+            msg_bat()
+            sec_cou = 0
         else:
-            machine.reset()
+            sec_cou = sec_cou +1
+
 
 def usb_chk():
     usb_sts = 0
@@ -276,19 +273,13 @@ def usb_chk():
 
 onb_bli()
 
-while True:
-        
-    usb_sts = usb_chk()
+tkn_cle()
+wifi_connect()
+aio_client.set_callback(sub_cb)
+aio_client.connect()
+aio_client.subscribe(aio_lin)
+msg_con()
+sec_on()
 
-    if usb_sts ==0:
-        tkn_cle()
-        wifi_connect()
-        aio_client.set_callback(sub_cb)
-        aio_client.connect()
-        aio_client.subscribe(aio_lin)
-        msg_con()
-        sec_on()
+tkn_loop()
 
-        tkn_loop()
-    else:
-        sec_chr()
