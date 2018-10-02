@@ -48,6 +48,7 @@ col_dic = { 0 : 'WHITE',
 ## FUNCTIONS
         
 def wifi_connect():
+    '''Connects to network using ssid & passwords introduced at the definition section'''
     
     if not wifi_ntw.isconnected():
         wifi_ntw.active(True)
@@ -60,6 +61,8 @@ def wifi_connect():
                 pass
 
 def sec_on():
+    '''Draws an on secuence on the LED ring, starts with an incremental spiral that
+       multiplies its brightness on every cycle. Then dims down to zero'''
     
     sec_on_val = sec_on_mlt * sec_on_cyc
     for i in range(sec_on_cyc):
@@ -83,17 +86,20 @@ def sec_on():
     time.sleep(2)
 
 def msg_con():
+    '''Sends a string connection message to the cloud broker'''
+    
     try:
         time.sleep(0.4)
         aio_client.publish(topic = aio_sts, msg = 'TOKEN ['+tkn_id+'] CONNECTED TO: '+ str(wifi_ntw.ifconfig()[0]))
-        print('TOKEN ['+tkn_id+'] CONNECTED TO: '+ str(wifi_ntw.ifconfig()[0]))
+        #print('TOKEN ['+tkn_id+'] CONNECTED TO '+ str(wifi_ntw.ifconfig()[0]))
         #print('STATUS PUBLISHED.')
     except Exception as e:
         #print('FAILED TO PUBLISH CONNECTION STATUS.')
         pass
 
 def msg_bat():
-
+    '''Sends a battery level message to the cloud broker both as a percentage string and as an raw int'''
+    
     lvl = bat.read()* 2 * 100 / 4700
     try:       
         time.sleep(0.6)
@@ -106,6 +112,8 @@ def msg_bat():
         #print('FAILED TO PUBLISH BATTERY LEVEL.')
 
 def msg_sts(bea_cyc,bea_sle):
+    '''Sends a token status to the cloud broker. Include description of the beat.'''
+    
     try:       
         time.sleep(0.6)
         aio_client.publish(topic = aio_sts, msg = 'TOKEN [{}] IS {}, WITH {} BEATS EVERY {} SECONDS.'.format(tkn_id,col_dic[msg_dec],str(bea_cyc),str(bea_sle)))
@@ -116,6 +124,7 @@ def msg_sts(bea_cyc,bea_sle):
         #print('FAILED TO PUBLISH TOKEN STATUS') 
 
 def sub_cb(topic,msg):
+    '''Catches message from cloud broker and decodes it into a variable'''
     
     global msg_dec
     
@@ -124,6 +133,8 @@ def sub_cb(topic,msg):
     return msg_dec
 
 def tkn_bea(bea_cyc=2,bea_spe=4,bea_col='whi',bea_sle=5):
+    '''Generates beat pattern defined by the cycles per beat, the speed of the beat,
+       the color of the beat and the amounts of seconds between beats'''
 
     msg_sts(bea_cyc,bea_sle)
 
@@ -155,6 +166,7 @@ def tkn_bea(bea_cyc=2,bea_spe=4,bea_col='whi',bea_sle=5):
     time.sleep(bea_sle)
 
 def tkn_sec():
+    '''Gets the decoded message and translates it into a beating secuence'''
     
     if msg_dec == 0:        
         tkn_bea(bea_cyc=2,bea_spe=4,bea_col='whi',bea_sle=5)
@@ -175,17 +187,20 @@ def tkn_sec():
         tkn_bea(bea_cyc=2,bea_spe=4,bea_col='pur',bea_sle=1)
         
 def tkn_cle():
+    '''Cleans the emissions from the ring'''
     
     for i in range(3):        
         ring.fill((0,0,0))
         ring.write()
 
 def tkn_loop():
+    '''Loops constantly through the message callback and the beating sequence,
+       sending a battery message status every four itterations'''
     
     sec_cou = 0
     
     while True:
-        print(sec_cou)
+
         aio_client.check_msg()
         tkn_sec()
 
