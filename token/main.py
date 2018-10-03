@@ -71,7 +71,7 @@ def wifi_connect():
             print('CONNECTION ATTEMPT {}...'.format(str(cnt)))
             time.sleep(0.5)
 
-            if cnt >= 20:
+            if cnt >= 27:
                 cnt = 0
                 print('TOKEN [{}] GOING INTO DEEP SLEEP MODE.'.format(tkn_id))
                 machine.deepsleep()      
@@ -107,6 +107,7 @@ def sec_on():
     '''Draws an on secuence on the LED ring, starts with an incremental spiral that
        multiplies its brightness on every cycle. Then dims down to zero'''
     
+    print('TOKEN [{}] ON SECUENCE'.format(tkn_id))
     sec_on_val = sec_on_mlt * sec_on_cyc
     for i in range(sec_on_cyc):
         for j in range(ring_pix):
@@ -124,18 +125,17 @@ def sec_on():
         time.sleep(0.02)
         
     tkn_cle()
-    time.sleep(2)
+    time.sleep(.5)
 
 def msg_con():
     '''Sends a string connection message to the cloud broker'''
     
     try:
-        time.sleep(0.4)
+        time.sleep(0.1)
         aio_client.publish(topic = aio_sts, msg = 'TOKEN ['+tkn_id+'] CONNECTED TO: '+ str(wifi_ntw.ifconfig()[0]))
-        #print('TOKEN ['+tkn_id+'] CONNECTED TO '+ str(wifi_ntw.ifconfig()[0]))
-        #print('STATUS PUBLISHED.')
+        print('TOKEN ['+tkn_id+'] CONNECTED TO '+ str(wifi_ntw.ifconfig()[0]))
     except Exception as e:
-        #print('FAILED TO PUBLISH CONNECTION STATUS.')
+        print('FAILED TO PUBLISH CONNECTION STATUS.')
         pass
 
 def msg_bat():
@@ -152,26 +152,25 @@ def msg_bat():
     bat_per = bat_con*100 / 4700
     
     try:       
-        time.sleep(0.6)
+        time.sleep(0.1)
         aio_client.publish(topic = aio_sts, msg = 'TOKEN [{}] BATTERY LEVEL IS {:.2f} %'.format(tkn_id,bat_per))
-        time.sleep(0.4)
+        time.sleep(0.1)
         aio_client.publish(topic = aio_bat, msg = str(bat.read()*2))
-        #print('BATTERY LEVEL: {:.2f} %'.format(lvl))
+        print('TOKEN [{}] BATTERY LEVEL IS {:.2f}%.'.format(tkn_id, bat_per))
     except Exception as e:
         pass
-        #print('FAILED TO PUBLISH BATTERY LEVEL.')
+        print('FAILED TO PUBLISH BATTERY LEVEL.')
 
 def msg_sts(bea_cyc,bea_sle):
     '''Sends a token status to the cloud broker. Include description of the beat.'''
     
     try:       
-        time.sleep(0.6)
+        time.sleep(0.1)
         aio_client.publish(topic = aio_sts, msg = 'TOKEN [{}] IS {}, WITH {} BEATS EVERY {} SECONDS.'.format(tkn_id,col_dic[msg_dec],str(bea_cyc),str(bea_sle)))
-        aio_client.publish(topic = aio_sts, msg = msg_dec)
-        #print('TOKEN IS: '+ str(msg_dec))
+        print('TOKEN [{}] IS {}.'.format(tkn_id,col_dic[msg_dec]))
     except Exception as e:
         pass
-        #print('FAILED TO PUBLISH TOKEN STATUS') 
+        print('FAILED TO PUBLISH TOKEN STATUS') 
 
 def sub_cb(topic,msg):
     '''Catches message from cloud broker and decodes it into a variable'''
@@ -209,7 +208,7 @@ def tkn_bea(bea_cyc=2,bea_spe=4,bea_col='whi',bea_sle=5):
                 ring[j] = (val,0,val)
 
         ring.write()
-        time.sleep_ms(20)
+        time.sleep(.02)
 
     tkn_cle()
     time.sleep(bea_sle)
@@ -264,7 +263,7 @@ def usb_chk():
     
     for i in range(3):
         usb_sts = usb_sts + usb_pin.value()
-        time.sleep_ms(20)
+        time.sleep(.02)
         
     return usb_sts    
     
