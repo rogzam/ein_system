@@ -20,19 +20,7 @@ aio_sts = 'poc-ein.cou-sts-'+ cou_id
 
 aio_client = MQTTClient(aio_user, aio_key ,secure=False)
 
-## FUNCTIONS 
-
-def msg_rin(wait):
-    '''Sends a random number to the feed'every X seconds'''
-
-    while True:
-        ran = random.randint(0,5)
-        msg_con = 'COUNTER [{}] IS {}.'.format(cou_id,ran)
-        msg_sts = ran
-        print(msg_con)
-        aio_client.publish(aio_con, msg_con)
-        aio_client.publish(aio_sts, msg_sts)
-        time.sleep(wait)
+## FUNCTIONS
 
 def msg_con():
     '''Sends connection status to the cloud console.'''
@@ -45,7 +33,19 @@ def msg_con():
         print(msg_con)
     except Exception as e:
         pass
-        print('FAILED TO PUBLISH COUNTER INITIAL CONNECTION')         
+        print('FAILED TO PUBLISH COUNTER [{}] INITIAL CONNECTION'.format(cou_id))  
+
+def msg_rin(wait):
+    '''Sends a random number to the feed'every X seconds'''
+
+    while True:
+        ran = random.randint(0,5)
+        msg_con = 'COUNTER [{}] IS {}.'.format(cou_id,ran)
+        msg_sts = ran
+        print(msg_con)
+        aio_client.publish(aio_con, msg_con)
+        aio_client.publish(aio_sts, msg_sts)
+        time.sleep(wait)       
 
 ## EXECUTION
 
