@@ -2,11 +2,14 @@
 
 ## LIBRARIES
 
+from Adafruit_IO import MQTTClient
+import random
 from imutils.object_detection import non_max_suppression
 import numpy as np
 import cv2
 import datetime
 import time
+import socket
 
 ## DEVICE ID
 
@@ -14,11 +17,18 @@ cou_id = '0001'
 
 ## DEFINITIONS
 
+aio_key = '6d2080fc57374353ba8a59d11dcefbb3'
+aio_user = 'rogzam'
+aio_con = 'poc-ein.cou-con-'+ cou_id
+aio_sts = 'poc-ein.cou-sts-'+ cou_id
+
+aio_client = MQTTClient(aio_user, aio_key ,secure=False)
+
 foo_src = 'foo_sam/foo_sam_01.MOV'
 img_des = 'pho_pro/'
 
 cap_fmt = '.png'
-cyc_int = 200
+cyc_int = 1000
 cyc_cnt = 0
 
 rsz_fct = 3
@@ -58,8 +68,6 @@ def hog_img(src):
         cv2.rectangle(src, (xA, yA), (xB, yB), (0, 0, 200), 2)
 
     cnt = len(rects)
-
-    print("{} PEDESTRIANS DETECTED IN IMAGE '{}'.".format(cnt,img_nam))
     
     return src, cnt
 
@@ -69,24 +77,65 @@ def nam_img(fmt='.png'):
     tim_now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     nam = '{}_[{}]{}'.format(tim_now,cou_id,fmt)
     return nam
+
+def msg_net():
+    '''Sends connection status to the cloud console.'''
+
+    cou_ip = socket.gethostbyname(socket.gethostname())
     
+    try:       
+        msg_net = 'COUNTER [{}] CONNECTED TO {}'.format(cou_id,cou_ip)
+        aio_client.publish(aio_con, msg_net)
+        print(msg_net)
+        
+    except Exception as e:
+        pass
+        print('FAILED TO PUBLISH COUNTER [{}] INITIAL CONNECTION'.format(cou_id))
+
+def msg_cap():
+    '''Sends counter capture info to the cloud console'''
+    
+    msg_sts = cnt_hog
+    msg_con = "COUNTER [{}] DETECTED {} PEDESTRIANS IN IMAGE {}.".format(cou_id,cnt_hog,img_nam)
+
+    print(msg_con)
+
+    aio_client.publish(aio_con, msg_con)
+    aio_client.publish(aio_sts, msg_sts)
+
+def msg_img():
+    '''Sends image information to cloude console'''
+
+    msg_con = "COUNTER [{}] SAVED {} IMAGE IN {} DIRECTORY.".format(cou_id,img_nam,img_des)
+
+    print(msg_con)
+    
+    aio_client.publish(aio_con, msg_con)
+
+
 ## EXECUTION
 
+aio_client.connect()
+aio_client.loop_background()
+msg_net()
 vid_cap = cv2.VideoCapture(foo_src);
 
 while True:
 
-    _, img_raw = vid_cap.read()
+    _, img_raw = vid_cap.read()                 
 
     if cyc_cnt % cyc_int == 0:
                
-        img_rsz = rsz_img(img_raw,rsz_fct)
+        img_rsz = rsz_img(img_raw,rsz_fct)  
         img_nam = nam_img(cap_fmt)
+        
         img_hog, cnt_hog = hog_img(img_rsz)
 
+        msg_cap()
+
         cv2.imwrite(img_des+img_nam, img_rsz)
-        
-        print('IMAGE CAPTURED FROM {} AND RESIZED BY {}.'.format(foo_src,rsz_fct))
+
+        msg_img()
 
     else:
         pass

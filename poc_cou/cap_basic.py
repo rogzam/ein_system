@@ -14,7 +14,6 @@ def rsz(image,fac=2):
 
 img_ini = rsz(vid_cap.read()[1],2)
 
-
 while 1:
     img_raw = vid_cap.read()[1]
     print('read a new frame:')
