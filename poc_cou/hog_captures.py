@@ -3,6 +3,7 @@
 ## LIBRARIES
 
 from Adafruit_IO import MQTTClient
+from PIL import Image
 import random
 from imutils.object_detection import non_max_suppression
 import numpy as np
@@ -10,6 +11,7 @@ import cv2
 import datetime
 import time
 import socket
+import base64
 
 ## DEVICE ID
 
@@ -21,13 +23,14 @@ aio_key = '6d2080fc57374353ba8a59d11dcefbb3'
 aio_user = 'rogzam'
 aio_con = 'poc-ein.cou-con-'+ cou_id
 aio_sts = 'poc-ein.cou-sts-'+ cou_id
+aio_img = 'poc-ein.cou-img-'+ cou_id
 
 aio_client = MQTTClient(aio_user, aio_key ,secure=False)
 
 foo_src = 'foo_sam/foo_sam_01.MOV'
 img_des = 'pho_pro/'
 
-cap_fmt = '.png'
+cap_fmt = '.jpeg'
 cyc_int = 1000
 cyc_cnt = 0
 
@@ -106,12 +109,20 @@ def msg_cap():
 def msg_img():
     '''Sends image information to cloude console'''
 
-    msg_con = "COUNTER [{}] SAVED {} IMAGE IN {} DIRECTORY.".format(cou_id,img_nam,img_des)
+    gry_hog = cv2.cvtColor(img_hog, cv2.COLOR_BGR2GRAY)
+    rzs_hog = rsz_img(img_hog,1.3)
+
+    cv2.imwrite(img_des+img_nam, rzs_hog)
+
+    img_opn = open(img_des+img_nam,'rb')
+    str_img = base64.b64encode(img_opn.read())
+
+    msg_con = "COUNTER [{}] SAVED NEW IMAGE ({}KBs) IN {} DIRECTORY.".format(cou_id,len(str_img),img_des)
+        
+    aio_client.publish(aio_con, msg_con)
+    aio_client.publish(aio_img, str_img)
 
     print(msg_con)
-    
-    aio_client.publish(aio_con, msg_con)
-
 
 ## EXECUTION
 
