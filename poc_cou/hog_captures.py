@@ -43,9 +43,11 @@ hog_des.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 
 def rsz_img(img,fct):   
     '''Resizes an image by the factor indicated in both width and height'''
-        
+
+    #print(
     h, w = img.shape[:2]
     img_rsz = cv2.resize(img,(int(w/fct),int(h/fct)))
+        
     return img_rsz
 
 def src_id(src):
@@ -129,11 +131,17 @@ def msg_img():
 aio_client.connect()
 aio_client.loop_background()
 msg_net()
-vid_cap = cv2.VideoCapture(foo_src);
+vid_cap = cv2.VideoCapture(foo_src)
+
+
+#print(vid_cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
 while True:
 
-    _, img_raw = vid_cap.read()                 
+    _, img_raw = vid_cap.read()
+
+    if isinstance(foo_src, str) and vid_cap.get(cv2.CAP_PROP_POS_FRAMES) == vid_cap.get(cv2.CAP_PROP_FRAME_COUNT):
+        vid_cap.set(cv2.CAP_PROP_POS_AVI_RATIO,0) 
 
     if cyc_cnt % cyc_int == 0:
                
