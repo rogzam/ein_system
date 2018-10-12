@@ -192,6 +192,8 @@ ssd_net = cv2.dnn.readNetFromCaffe(par_arg.prototxt, par_arg.weights)
 while True:
 
     rawCapture = PiRGBArray(camera)
+
+    rawCapture.truncate(0)
     
     img_nam = nam_img(cap_fmt)
 
@@ -210,8 +212,6 @@ while True:
         cv2.imwrite(img_des+img_nam, ssd_cap)
         
         msg_img()
-
-        rawCapture.truncate(0)
 
     else:
         pass    
