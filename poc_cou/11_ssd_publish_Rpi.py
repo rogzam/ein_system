@@ -20,7 +20,7 @@ import argparse
 par = argparse.ArgumentParser(description='Script to run MobileNet-SSD object detection network')
 
 #par.add_argument('-s','--foo_src', default= 0, help="Path to video file. If empty, camera's stream will be used")
-par.add_argument('-r','--rsz_fct', default= 4, help="Resize factor, increase in case image is to big for cloud.")
+par.add_argument('-r','--rsz_fct', default= 2, help="Resize factor, increase in case image is to big for cloud.")
 par.add_argument("--prototxt", default="MobileNetSSD_deploy.prototxt",help='Path to text network file: ''MobileNetSSD_deploy.prototxt for Caffe model')
 par.add_argument("--weights", default="MobileNetSSD_deploy.caffemodel",help='Path to weights: ''MobileNetSSD_deploy.caffemodel for Caffe model')
 par.add_argument("--thr", default=0.2, type=float, help="confidence threshold to filter out weak detections")
@@ -43,7 +43,6 @@ aio_client = MQTTClient(aio_user, aio_key ,secure=False)
 
 camera = PiCamera()
 
-foo_src = 
 rsz_fct = par_arg.rsz_fct
 #foo_src = 'foo_sam/foo_sam_01.MOV'
 img_des = 'pho_pro/'
@@ -192,6 +191,8 @@ msg_net()
 ssd_net = cv2.dnn.readNetFromCaffe(par_arg.prototxt, par_arg.weights)
 
 while True:
+
+    time.sleep(.5)
     
     img_nam = nam_img(cap_fmt)
 
@@ -200,7 +201,6 @@ while True:
     if cyc_cnt % cyc_int == 0:
 
         rawCapture = PiRGBArray(camera)
-        time.sleep(.1)
         camera.capture(rawCapture,format='bgr')
         img_pi = rawCapture.array
         img_raw = cv2.flip(img_pi,0)
