@@ -19,8 +19,8 @@ import argparse
 
 par = argparse.ArgumentParser(description='Script to run MobileNet-SSD object detection network')
 
-par.add_argument('-c','--cyc_int', default= 200,type=int, help="Program cycles before capture default 200 for Rpi.")
-par.add_argument('-r','--rsz_fct', default= 1.2, help="Resize factor, increase in case image is to big for cloud.")
+par.add_argument('-c','--cyc_int', default= 200, type= int, help="Program cycles before capture default 200 for Rpi.")
+par.add_argument('-r','--rsz_fct', default= 1.e, type= float, help="Resize factor, increase in case image is to big for cloud.")
 par.add_argument("--prototxt", default="MobileNetSSD_deploy.prototxt",help='Path to text network file: ''MobileNetSSD_deploy.prototxt for Caffe model')
 par.add_argument("--weights", default="MobileNetSSD_deploy.caffemodel",help='Path to weights: ''MobileNetSSD_deploy.caffemodel for Caffe model')
 par.add_argument("--thr", default=0.2, type=float, help="confidence threshold to filter out weak detections")
@@ -126,8 +126,6 @@ def ssd_img(src):
 
     if cou_pep > 0:
         cv2.putText(img_raw,'{} PEDESTRIANS DETECTED'.format(str(cou_pep)),(int(img_raw.shape[1]/30),int(img_raw.shape[0] - img_raw.shape[0]/20)),cv2.FONT_HERSHEY_TRIPLEX,.5,(255,255,255),1,cv2.LINE_AA);
-
-    print('DETECTIONS = ' + str(cou_pep))
 
     return img_raw,cou_pep
 
