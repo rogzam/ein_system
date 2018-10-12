@@ -190,9 +190,9 @@ msg_net()
 
 ssd_net = cv2.dnn.readNetFromCaffe(par_arg.prototxt, par_arg.weights)
 
-while True:
+time.sleep(.5)
 
-    time.sleep(.5)
+while True:
     
     img_nam = nam_img(cap_fmt)
 
