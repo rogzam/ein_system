@@ -14,7 +14,7 @@ tkn_id = '0001'
 
 ## DEFINITIONS
 
-ring_pix = 16
+ring_pix = 12
 ring_pin = 22
 ring = neopixel.NeoPixel(machine.Pin(ring_pin), ring_pix)
 
@@ -22,7 +22,8 @@ bat = machine.ADC(machine.Pin(35))
 bat.atten(3)
 
 onb_led = machine.Pin(13,machine.Pin.OUT)
-usb_pin = machine.Pin(12,machine.Pin.IN)
+
+usb_pin = machine.Pin(36,machine.Pin.IN)
 
 sec_on_mlt = 30
 sec_on_cyc = 3
@@ -42,9 +43,6 @@ aio_bat = 'rogzam/feeds/poc-ein.tkn-bat-'+ tkn_id
 
 cou_sim = 'rogzam/feeds/poc-ein.cou-sim'
 
-
-##aio_con = 'rogzam/feeds/poc-ein.con'
-##aio_bat = 'rogzam/feeds/poc-ein.tkn-{}-bat'.format(tkn_id)
 aio_client = MQTTClient(aio_id, aio_server, aio_port, aio_user, aio_key)
 
 msg_dec = 0
@@ -68,7 +66,7 @@ def onb_bli():
 def wifi_connect():
     '''Connects to network using ssid & passwords introduced at the definition section.
        Also tries to connect to wifi 20 times, after that, it goes into deepsleep mode.'''
-
+    
     cnt = 0
     
     if not wifi_ntw.isconnected():
@@ -87,29 +85,27 @@ def wifi_connect():
                 cnt = cnt + 1
                 pass            
     
-##def sec_chr():
-##    '''Draws a charging secuence on the LED ring, starts with an incremental spiral that
-##       multiplies its brightness on every cycle. Then dims down to zero'''
-##
-##    ring.fill((0,0,20))
-##    ring.write()
-##    time.sleep(1)
-##
-##        sec_on_val = sec_on_mlt * sec_on_cyc
-##        for i in range(sec_on_cyc):
-##            for j in range(ring_pix):
-##                ring[j] = (0,0,(i+1)*sec_on_mlt)
-##                time.sleep(0.05)
-##                ring.write()
-##
-##        for i in range (sec_on_val):
-##            for j in range(ring_pix):
-##                dim = sec_on_val - i
-##                ring[j] = (dim,dim,dim)
-##            ring.write()
-##            time.sleep(0.02)
-##            
-##        tkn_cle()
+def sec_chr():
+    '''Draws a charging secuence on the LED ring, starts with an incremental spiral that
+       multiplies its brightness on every cycle. Then dims down to zero'''
+
+    sec_on_val = sec_on_mlt * sec_on_cyc
+    for i in range(sec_on_cyc):
+        for j in range(ring_pix):
+            ring[j] = (0,0,(i+1)*sec_on_mlt)
+            time.sleep(0.05)
+            ring.write()
+            
+    time.sleep(.8)
+
+##    for i in range (sec_on_val):
+##        for j in range(ring_pix):
+##            dim = sec_on_val - i
+##            ring[j] = (dim,dim,dim)
+##        ring.write()
+##        time.sleep(0.02)
+##        
+    tkn_cle()
 
 def sec_on():
     '''Draws an on secuence on the LED ring, starts with an incremental spiral that
@@ -174,7 +170,7 @@ def msg_sts(bea_cyc,bea_sle):
     
     try:       
         msg_sts = str(msg_dec)
-        msg_con = 'TOKEN [{}] IS {}, WITH {} BEATS EVERY {} SECONDS.'.format(tkn_id,col_dic[msg_dec],str(bea_cyc),str(bea_sle))
+        msg_con = 'TOKEN [{}] IS {}, WITH {} BEATS EVERY {} SECONDS.{}'.format(tkn_id,col_dic[msg_dec],str(bea_cyc),str(bea_sle),str(usb_pin.value()))
         aio_client.publish(topic=aio_sts, msg=msg_sts)
         aio_client.publish(topic=aio_con, msg=msg_con)
         print(msg_con)
@@ -256,34 +252,56 @@ def tkn_loop():
     '''Loops constantly through the message callback and the beating sequence,
        sending a battery message status every four itterations'''
 
+    #usb_rst()
+    
     sec_cou = 0
     while True:
 
         aio_client.check_msg()
         tkn_sec()
+        
 
         if sec_cou == 4:
             msg_bat()
             sec_cou = 0
         else:
             sec_cou = sec_cou +1
-
-
-##def usb_chk():
+            
+##def usb_rst():
+##    
 ##    usb_sts = 0
 ##    
 ##    for i in range(3):
 ##        usb_sts = usb_sts + usb_pin.value()
-##        time.sleep(.02)
-##        
-##    return usb_sts    
+##        #time.sleep(.02)
+##
+##    if usb_sts >= 2:
+##        machine.reset()
+##    else:
+##        pass
+
+def usb_chk():
+    time.sleep(0.1)
+    print('usb_chk')
+##    usb_sts = 0
+##
+##    for i in range(3):
+##        usb_sts = usb_sts + usb_pin.value()
+##        #time.sleep(.02)
+
+    while usb_pin.value() >= 2:
+        print('usb_connected')
+        sec_chr()
+        usb_sts = 0
+    else:
+        pass
     
-            
 ## EXECUTION        
 
 onb_bli()
 
 tkn_cle()
+##usb_chk()
 wifi_connect()
 aio_client.set_callback(sub_cb)
 aio_client.connect()
