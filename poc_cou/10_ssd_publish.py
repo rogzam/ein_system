@@ -19,6 +19,7 @@ import argparse
 par = argparse.ArgumentParser(description='Script to run MobileNet-SSD object detection network')
 
 par.add_argument('-s','--foo_src', default= 0, help="Path to video file. If empty, camera's stream will be used")
+par.add_argument('-c','--cyc_int', default= 300, help="Program cycles before capture, default 100 for rpi, on mbp use 300 max.")
 par.add_argument('-r','--rsz_fct', default= 4, help="Resize factor, increase in case image is to big for cloud.")
 par.add_argument("--prototxt", default="MobileNetSSD_deploy.prototxt",help='Path to text network file: ''MobileNetSSD_deploy.prototxt for Caffe model')
 par.add_argument("--weights", default="MobileNetSSD_deploy.caffemodel",help='Path to weights: ''MobileNetSSD_deploy.caffemodel for Caffe model')
@@ -46,7 +47,7 @@ rsz_fct = par_arg.rsz_fct
 img_des = 'pho_pro/'
 
 cap_fmt = '.jpeg'
-cyc_int = 300
+cyc_int = cyc_int
 cyc_cnt = 0
 
 classNames = {15: 'person'}

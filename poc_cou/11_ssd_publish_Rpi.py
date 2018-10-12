@@ -19,7 +19,7 @@ import argparse
 
 par = argparse.ArgumentParser(description='Script to run MobileNet-SSD object detection network')
 
-#par.add_argument('-s','--foo_src', default= 0, help="Path to video file. If empty, camera's stream will be used")
+par.add_argument('-c','--cyc_int', default= 100, help="Program cycles before capture, default 100 for rpi, on mbp use 300 max.")
 par.add_argument('-r','--rsz_fct', default= 2, help="Resize factor, increase in case image is to big for cloud.")
 par.add_argument("--prototxt", default="MobileNetSSD_deploy.prototxt",help='Path to text network file: ''MobileNetSSD_deploy.prototxt for Caffe model')
 par.add_argument("--weights", default="MobileNetSSD_deploy.caffemodel",help='Path to weights: ''MobileNetSSD_deploy.caffemodel for Caffe model')
@@ -44,11 +44,10 @@ aio_client = MQTTClient(aio_user, aio_key ,secure=False)
 camera = PiCamera()
 
 rsz_fct = par_arg.rsz_fct
-#foo_src = 'foo_sam/foo_sam_01.MOV'
 img_des = 'pho_pro/'
 
 cap_fmt = '.jpeg'
-cyc_int = 300
+cyc_int = par_arg.cyc_int
 cyc_cnt = 0
 
 classNames = {15: 'person'}
