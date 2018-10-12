@@ -19,7 +19,7 @@ import argparse
 
 par = argparse.ArgumentParser(description='Script to run MobileNet-SSD object detection network')
 
-par.add_argument('-c','--cyc_int', default= 300,type=int, help="Program cycles before capture default 300.")
+par.add_argument('-c','--cyc_int', default= 200,type=int, help="Program cycles before capture default 200 for Rpi.")
 par.add_argument('-r','--rsz_fct', default= 1.2, help="Resize factor, increase in case image is to big for cloud.")
 par.add_argument("--prototxt", default="MobileNetSSD_deploy.prototxt",help='Path to text network file: ''MobileNetSSD_deploy.prototxt for Caffe model')
 par.add_argument("--weights", default="MobileNetSSD_deploy.caffemodel",help='Path to weights: ''MobileNetSSD_deploy.caffemodel for Caffe model')
@@ -198,10 +198,13 @@ while True:
     img_nam = nam_img(cap_fmt)
 
     print(str(cyc_cnt))
+
+    time.sleep(.1)
     
     if cyc_cnt % cyc_int == 0:
         
         camera.capture(rawCapture,format='bgr')
+        
         img_pi = rawCapture.array
         img_raw = cv2.flip(img_pi,0)
 
