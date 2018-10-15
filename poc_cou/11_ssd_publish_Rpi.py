@@ -20,7 +20,7 @@ import argparse
 par = argparse.ArgumentParser(description='Script to run MobileNet-SSD object detection network')
 
 par.add_argument('-c','--cyc_int', default= 200, type= int, help="Program cycles before capture default 200 for Rpi.")
-par.add_argument('-r','--rsz_fct', default= 1.e, type= float, help="Resize factor, increase in case image is to big for cloud.")
+par.add_argument('-r','--rsz_fct', default= 1.4, type= float, help="Resize factor, increase in case image is to big for cloud.")
 par.add_argument("--prototxt", default="MobileNetSSD_deploy.prototxt",help='Path to text network file: ''MobileNetSSD_deploy.prototxt for Caffe model')
 par.add_argument("--weights", default="MobileNetSSD_deploy.caffemodel",help='Path to weights: ''MobileNetSSD_deploy.caffemodel for Caffe model')
 par.add_argument("--thr", default=0.2, type=float, help="confidence threshold to filter out weak detections")

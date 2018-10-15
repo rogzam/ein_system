@@ -47,6 +47,8 @@ aio_client = MQTTClient(aio_id, aio_server, aio_port, aio_user, aio_key)
 
 msg_dec = 0
 
+## DICTS
+
 col_dic = { 0 : 'WHITE',
             1 : 'GREEN',
             2 : 'YELLOW',
@@ -170,7 +172,7 @@ def msg_sts(bea_cyc,bea_sle):
     
     try:       
         msg_sts = str(msg_dec)
-        msg_con = 'TOKEN [{}] IS {}, WITH {} BEATS EVERY {} SECONDS.{}'.format(tkn_id,col_dic[msg_dec],str(bea_cyc),str(bea_sle),str(usb_pin.value()))
+        msg_con = 'TOKEN [{}] IS {}, WITH {} BEATS EVERY {} SECONDS.'.format(tkn_id,col_dic[msg_dec],str(bea_cyc),str(bea_sle))
         aio_client.publish(topic=aio_sts, msg=msg_sts)
         aio_client.publish(topic=aio_con, msg=msg_con)
         print(msg_con)
@@ -187,59 +189,56 @@ def sub_cb(topic,msg):
     
     return msg_dec
 
-def tkn_bea(bea_cyc=2,bea_spe=4,bea_col='whi',bea_sle=5):
+def tkn_bea(bea_cyc,bea_spe,bea_col,bea_sle,bea_div,bea_act):
     '''Generates beat pattern defined by the cycles per beat, the speed of the beat,
        the color of the beat and the amounts of seconds between beats'''
 
     msg_sts(bea_cyc,bea_sle)
-
+    
     for i in range(0,bea_cyc*512,bea_spe):
-        for j in range (ring_pix):
+        for j in range ((ring_pix/bea_div)*(bea_act)):
             if (i // 256) % 2 == 0:
-                val = i
+                pix_val = i
             else:
-                val = 255 - i
+                pix_val = 255 - i            
 
-            if bea_col == 'whi':
-                ring[j] = (val,val,val)
-            elif bea_col == 'gre':
-                ring[j] = (0,val,0)
-            elif bea_col == 'yel':
-                ring[j] = (val,val,0)
-            elif bea_col == 'red':
-                ring[j] = (val,0,0)
-            elif bea_col == 'blu':
-                ring[j] = (0,0,val)
-            else:
-                bea_col == 'pur'
-                ring[j] = (val,0,val)
+## PROPER COLOR DICTIONARY, COMMENTED TO ADJUST AFTER RING SOLDERING FUCK-UP
+
+##            col_dic = { 'whi' : (pix_val, pix_val, pix_val), 
+##                        'yel' : (pix_val, pix_val, 0),
+##                        'cya' : (0, pix_val, pix_val),
+##                        'pur' : (pix_val, 0, pix_val),
+##                        'red' : (pix_val, 0, 0),
+##                        'gre' : (0, pix_val, 0),
+##                        'blu' : (0, 0, pix_val), }
+            
+            col_dic = { 'whi' : (pix_val, pix_val, pix_val),
+                        'yel' : (pix_val, pix_val, 0),
+                        'pur' : (0, pix_val, pix_val),
+                        'cya' : (pix_val, 0, pix_val),
+                        'gre' : (pix_val, 0, 0),
+                        'red' : (0, pix_val, 0),
+                        'blu' : (0, 0, pix_val), }            
+
+            ring[j] = col_dic[bea_col]
 
         ring.write()
         time.sleep(.02)
 
-    tkn_cle()
+    for i in range(3):        
+        ring.fill((0,0,0))
+        ring.write()
+        
     time.sleep(bea_sle)
 
 def tkn_sec():
     '''Gets the decoded message and translates it into a beating secuence'''
     
     if msg_dec == 0:        
-        tkn_bea(bea_cyc=2,bea_spe=4,bea_col='whi',bea_sle=5)
-        
-    elif msg_dec == 1:      
-        tkn_bea(bea_cyc=2,bea_spe=4,bea_col='gre',bea_sle=5)
-
-    elif msg_dec == 2:      
-        tkn_bea(bea_cyc=2,bea_spe=4,bea_col='yel',bea_sle=2)
-
-    elif msg_dec == 3:      
-        tkn_bea(bea_cyc=2,bea_spe=4,bea_col='red',bea_sle=0)
-
-    elif msg_dec == 4:      
-        tkn_bea(bea_cyc=2,bea_spe=4,bea_col='blu',bea_sle=5)    
+        tkn_bea(bea_cyc=2, bea_spe=5, bea_col='whi', bea_sle=5, bea_div=12, bea_act=6)
 
     else:
-        tkn_bea(bea_cyc=2,bea_spe=4,bea_col='pur',bea_sle=1)
+        tkn_bea(bea_cyc=2, bea_spe=5, bea_col='blu', bea_sle=5, bea_div=12, bea_act=6)
         
 def tkn_cle():
     '''Cleans the emissions from the ring'''
@@ -251,62 +250,30 @@ def tkn_cle():
 def tkn_loop():
     '''Loops constantly through the message callback and the beating sequence,
        sending a battery message status every four itterations'''
-
-    #usb_rst()
     
     sec_cou = 0
     while True:
 
         aio_client.check_msg()
         tkn_sec()
-        
 
         if sec_cou == 4:
             msg_bat()
             sec_cou = 0
         else:
             sec_cou = sec_cou +1
-            
-##def usb_rst():
-##    
-##    usb_sts = 0
-##    
-##    for i in range(3):
-##        usb_sts = usb_sts + usb_pin.value()
-##        #time.sleep(.02)
-##
-##    if usb_sts >= 2:
-##        machine.reset()
-##    else:
-##        pass
-
-def usb_chk():
-    time.sleep(0.1)
-    print('usb_chk')
-##    usb_sts = 0
-##
-##    for i in range(3):
-##        usb_sts = usb_sts + usb_pin.value()
-##        #time.sleep(.02)
-
-    while usb_pin.value() >= 2:
-        print('usb_connected')
-        sec_chr()
-        usb_sts = 0
-    else:
-        pass
-    
+             
 ## EXECUTION        
 
 onb_bli()
 
 tkn_cle()
-##usb_chk()
 wifi_connect()
 aio_client.set_callback(sub_cb)
 aio_client.connect()
 aio_client.subscribe(cou_sim)
 msg_con()
+
 sec_on()
 
 tkn_loop()
