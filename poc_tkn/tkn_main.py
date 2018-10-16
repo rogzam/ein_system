@@ -41,8 +41,6 @@ aio_con = 'rogzam/feeds/poc-ein.tkn-con-'+ tkn_id
 aio_sts = 'rogzam/feeds/poc-ein.tkn-sts-'+ tkn_id
 aio_bat = 'rogzam/feeds/poc-ein.tkn-bat-'+ tkn_id
 
-cou_sim = 'rogzam/feeds/poc-ein.cou-sim'
-
 aio_client = MQTTClient(aio_id, aio_server, aio_port, aio_user, aio_key)
 
 msg_dec = 0
@@ -150,21 +148,35 @@ def msg_bat():
 
     bat_lvl = bat.read()*2
     
-    if bat_lvl >= 4700:
+
+    if bat_lvl <= 3700:
+        try:
+            msg_con = 'TOKEN [{}] BATTERY LEVEL IS TOO LOW ({}mAh), TOKEN GOING INTO DEEPSLEEP MODE.'.format(tkn_id,str(bat_lvl))
+            aio_client.publish(topic=aio_con, msg=msg_con)
+            print(msg_con)
+            time.sleep(1)
+            machine.deepsleep()
+
+        except Exception as e:
+            msg_con = 'COULDN"T PRINT IT.'
+            aio_client.publish(topic=aio_con, msg=msg_con)
+    
+    elif bat_lvl >= 4700:
         bat_con = 4700
+
     else:
         bat_con = bat_lvl
     
     bat_per = bat_con*100 / 4700
     
     try:       
-        msg_bat = str(bat.read()*2)
+        msg_bat = str(bat_lvl)
         msg_con = 'TOKEN [{}] BATTERY LEVEL IS {:.2f} %'.format(tkn_id,bat_per)
         aio_client.publish(topic=aio_bat, msg=msg_bat)
-        aio_client.publish(topic=aio_con, msg=msg_con )
+        aio_client.publish(topic=aio_con, msg=msg_con)
         print(msg_con)
+        
     except Exception as e:
-        pass
         print('FAILED TO PUBLISH BATTERY LEVEL.')
 
 def msg_sts(bea_cyc,bea_sle):
@@ -173,7 +185,6 @@ def msg_sts(bea_cyc,bea_sle):
     try:       
         msg_sts = str(msg_dec)
         msg_con = 'TOKEN [{}] IS {}, WITH {} BEATS EVERY {} SECONDS.'.format(tkn_id,col_dic[msg_dec],str(bea_cyc),str(bea_sle))
-        aio_client.publish(topic=aio_sts, msg=msg_sts)
         aio_client.publish(topic=aio_con, msg=msg_con)
         print(msg_con)
     except Exception as e:
@@ -235,10 +246,17 @@ def tkn_sec():
     '''Gets the decoded message and translates it into a beating secuence'''
     
     if msg_dec == 0:        
-        tkn_bea(bea_cyc=2, bea_spe=5, bea_col='whi', bea_sle=5, bea_div=12, bea_act=6)
-
+        tkn_bea(bea_cyc=2, bea_spe=5, bea_col='whi', bea_sle=10, bea_div=1, bea_act=1)
+    elif msg_dec == 1:        
+        tkn_bea(bea_cyc=3, bea_spe=5, bea_col='gre', bea_sle=10, bea_div=1, bea_act=1)
+    elif msg_dec == 2:        
+        tkn_bea(bea_cyc=4, bea_spe=5, bea_col='yel', bea_sle=10, bea_div=1, bea_act=1)    
+    elif msg_dec == 3:        
+        tkn_bea(bea_cyc=5, bea_spe=5, bea_col='red', bea_sle=10, bea_div=1, bea_act=1)
+    elif msg_dec == 4:        
+        tkn_bea(bea_cyc=2, bea_spe=5, bea_col='blu', bea_sle=10, bea_div=1, bea_act=1)
     else:
-        tkn_bea(bea_cyc=2, bea_spe=5, bea_col='blu', bea_sle=5, bea_div=12, bea_act=6)
+        tkn_bea(bea_cyc=2, bea_spe=5, bea_col='pur', bea_sle=10, bea_div=1, bea_act=1)
         
 def tkn_cle():
     '''Cleans the emissions from the ring'''
@@ -258,6 +276,7 @@ def tkn_loop():
         tkn_sec()
 
         if sec_cou == 4:
+            
             msg_bat()
             sec_cou = 0
         else:
@@ -271,7 +290,7 @@ tkn_cle()
 wifi_connect()
 aio_client.set_callback(sub_cb)
 aio_client.connect()
-aio_client.subscribe(cou_sim)
+aio_client.subscribe(aio_sts)
 msg_con()
 
 sec_on()

@@ -47,7 +47,7 @@ rsz_fct = par_arg.rsz_fct
 img_des = 'pho_pro/'
 
 cap_fmt = '.jpeg'
-cyc_int = cyc_int
+cyc_int = par_arg.cyc_int
 cyc_cnt = 0
 
 classNames = {15: 'person'}
